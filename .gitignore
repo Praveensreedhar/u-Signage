@@ -1,0 +1,40 @@
+# Dependencies and generated build output
+node_modules/
+dist/
+build/
+coverage/
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+*.p12
+*.pfx
+/aws-known-hosts
+
+# Runtime data contains administrator credentials, sessions, and uploaded media
+data/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+*.db-wal
+*.db-shm
+
+# Temporary browser test data
+/overlay-update/browser-test-data/
+/overlay-update/browser-box-test-*/
+/overlay-update/studio-test-*/
+
+# Generated deployment bundles and transfer chunks
+/aws-deploy/*.tar.gz
+/aws-deploy/part[0-9]*
+/aws-deploy/transfer-probe.bin
+
+# Local logs and operating system files
+*.log
+.DS_Store
+Thumbs.db

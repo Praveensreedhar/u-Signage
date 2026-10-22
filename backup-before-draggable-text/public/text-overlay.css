@@ -1,0 +1,8 @@
+.text-overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:5%;pointer-events:none;overflow:hidden;z-index:2}
+.text-overlay-top{justify-content:flex-start}.text-overlay-center{justify-content:center}
+.text-overlay-content{max-width:100%;max-height:100%;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;text-align:center;line-height:1.25;font-family:Segoe UI,Arial,sans-serif;font-weight:700;padding:.2em .45em;border-radius:.15em;text-shadow:0 2px 5px #0008}
+.signage-scene{position:absolute;inset:0;container-type:inline-size;overflow:hidden}
+.editor-monitor,.overlay-preview{position:relative;container-type:inline-size;overflow:hidden}
+.overlay-preview{aspect-ratio:16/9;background:#152438;margin:16px 0;border-radius:8px}
+.overlay-preview>img,.overlay-preview>video{width:100%;height:100%;object-fit:contain}
+#fields textarea{width:100%;min-height:100px;resize:vertical;font:inherit;padding:12px;border:1px solid #b7c6d4;border-radius:8px}

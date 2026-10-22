@@ -1,0 +1,26 @@
+const {chromium}=require('C:/Users/AXTON/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const {spawn}=require('node:child_process');const path=require('node:path');const assert=require('node:assert/strict');
+(async()=>{const child=spawn(process.execPath,['server.mjs'],{env:{...process.env,DATA_DIR:path.resolve('studio-test-'+Date.now()),HOST:'127.0.0.1',PORT:'0'},stdio:['ignore','pipe','pipe']});let browser;try{
+const base=await new Promise((resolve,reject)=>{child.stdout.on('data',b=>{const m=String(b).match(/localhost:(\d+)/);if(m)resolve('http://127.0.0.1:'+m[1]);});child.on('error',reject);});
+browser=await chromium.launch({headless:true,channel:'msedge'});const page=await browser.newPage({viewport:{width:1440,height:1080}});const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(base);await page.locator('#password').fill('test-studio-password');await page.locator('#auth-submit').click();await page.locator('#shell').waitFor({state:'visible'});
+const api=async(url,data,method='post')=>{const r=await page.request[method](base+url,{data});assert.ok(r.ok(),await r.text());return r.json();};
+const pl=await api('/api/playlists',{name:'Weekend in store'});const assets=[];const poster=await browser.newPage({viewport:{width:1280,height:720}});
+for(const [name,color,title,sub] of [['Weekend arrivals','#374834','A fresh perspective.','THE WEEKEND EDIT / 01'],['Members event','#734935','Make it your weekend.','EXCLUSIVELY FOR MEMBERS / 02'],['Visit us today','#283e59','Something worth finding.','EXPLORE THE COLLECTION / 03']]){
+ await poster.setContent(`<body style="margin:0;background:${color};color:#f2eedf;font-family:Arial;display:flex;height:100vh"><div style="padding:80px;width:60%;box-sizing:border-box"><p style="letter-spacing:5px;font-size:18px">${sub}</p><h1 style="font-size:83px;letter-spacing:-4px;line-height:1.04;margin:85px 0 30px">${title}</h1><p style="font-size:22px">Thoughtfully selected. Ready to discover.</p></div><div style="width:40%;background:#ffffff0a;display:grid;place-items:center"><div style="height:420px;width:280px;border-radius:150px 150px 20px 20px;background:linear-gradient(140deg,#e4bc7a,#c4864f);box-shadow:30px 30px 0 #0002"></div></div></body>`);
+ const upload=await page.request.post(base+'/api/media',{headers:{'X-File-Name':name+'.png'},data:await poster.screenshot()});assets.push(await upload.json());
+}
+await poster.close();const items=[];for(let i=0;i<3;i++)items.push(await api('/api/items',{playlist_id:pl.id,media_id:assets[i].id,duration:2,position:i,transition:i?'fade':'cut'}));
+const text={enabled:true,text:'NEW THIS WEEK',position:'top',animation:'words',seconds:0.8,size:3,color:'#fff1b8',background:false,align:'left',box:{x:6,y:80,width:55,height:10}};
+await api('/api/items/'+items[0].id,{playlist_id:pl.id,media_id:assets[0].id,duration:2,position:0,text_overlay:[text,{...text,text:'Explore in store →',box:{x:67,y:85,width:30,height:10},size:2,align:'right'}]},'put');
+
+const wav=Buffer.alloc(46);wav.write('RIFF');wav.writeUInt32LE(38,4);wav.write('WAVEfmt ',8);wav.writeUInt32LE(16,16);wav.writeUInt16LE(1,20);wav.writeUInt16LE(1,22);wav.writeUInt32LE(8000,24);wav.writeUInt32LE(16000,28);wav.writeUInt16LE(2,32);wav.writeUInt16LE(16,34);wav.write('data',36);wav.writeUInt32LE(2,40);
+const up=await page.request.post(base+'/api/media',{headers:{'X-File-Name':'sound.wav'},data:wav});const audio=await up.json();
+await api('/api/audio_tracks',{playlist_id:pl.id,media_id:audio.id,name:'Music',first_scene:1,last_scene:null,volume:70,loop:1,fade_in:0,fade_out:0,effect:'none'});
+await api('/api/items/'+items[0].id,{playlist_id:pl.id,media_id:assets[0].id,duration:2,position:0,audio_id:audio.id},'put');
+await page.reload();await page.locator('[data-view=playlists]').click();
+await page.locator('.studio-timeline [data-action=text-remove]').first().click();await page.locator('#cancel-dialog').click();assert.equal(await page.locator('.studio-timeline [data-action=text-remove]').count(),2);
+await page.locator('.studio-timeline [data-action=text-remove]').first().click();await page.locator('#save').click();await page.waitForFunction(()=>document.querySelectorAll('.studio-timeline [data-action=text-remove]').length===1);
+await page.locator('.studio-timeline [data-action=track-remove]').click();await page.locator('#save').click();await page.waitForFunction(()=>document.querySelectorAll('.studio-audio-row').length===0);
+await page.locator('.studio-timeline [data-action=scene-audio-remove]').click();await page.locator('#save').click();await page.waitForFunction(()=>document.querySelectorAll('.studio-timeline [data-action=scene-audio-remove]').length===0);
+const final=await page.request.get(base+'/api/state').then(r=>r.json());assert.ok(final.media.some(m=>m.id===audio.id));assert.equal(final.audio_tracks.length,0);assert.equal(final.items[0].audio_id,null);assert.equal(JSON.parse(final.items[0].text_overlay).length,1);assert.deepEqual(errors,[]);console.log('Delete icons checked: cancel, text deletion, playlist audio deletion, scene audio removal, media preserved.');
+}finally{await browser?.close();child.kill();}})().catch(e=>{console.error(e);process.exitCode=1;});
