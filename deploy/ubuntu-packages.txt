@@ -1,0 +1,6 @@
+# Installed automatically by install-ubuntu.sh using apt.
+ca-certificates
+curl
+git
+rsync
+xz-utils

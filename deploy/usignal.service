@@ -1,0 +1,22 @@
+[Unit]
+Description=U Signal digital signage
+After=network.target
+
+[Service]
+Type=simple
+User=usignal
+Group=usignal
+WorkingDirectory=/opt/usignal
+EnvironmentFile=/etc/usignal/usignal.env
+ExecStart=/opt/usignal/node/bin/node /opt/usignal/server.mjs
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/usignal
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
