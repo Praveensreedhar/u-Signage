@@ -1,18 +1,20 @@
+import {isOnlineMedia,mountOnlineMedia} from '/online-media.js';
 import { slideFrames } from '/transitions.js';
 import {createTextOverlay,textLayers} from './text-overlay.js';
 
 // A local visual preview: never enrolls a display or changes playlist data.
 export function mountEditorPreview(host,{items,media,selectedId,onScene,onStatus}){
  let index=Math.max(0,items.findIndex(i=>i.id===selectedId)),playing=false,disposed=false,generation=0,frame,elapsed=0,started=0,scene,element,ready=false,limit=0;
+ const videoLike=el=>el?.tagName==='VIDEO'||el?.dataset.onlineVideo==='1';
  const time=value=>`${String(Math.floor(value/60)).padStart(2,'0')}:${(value%60).toFixed(1).padStart(4,'0')}`;
  const status=text=>onStatus?.(text);
- const clearScene=node=>{node?.querySelectorAll('video').forEach(v=>{v.pause();v.removeAttribute('src');v.load();});node?.remove();};
+ const clearScene=node=>{node?.onlineController?.destroy();node?.querySelectorAll('video').forEach(v=>{v.pause();v.removeAttribute('src');v.load();});node?.remove();};
  function progress(){
    if(disposed)return;
-   if(playing&&ready){elapsed=(performance.now()-started)/1000;if(element.tagName==='VIDEO'&&items[index].video_mode!=='timed')elapsed=element.currentTime;}
+   if(playing&&ready){elapsed=(performance.now()-started)/1000;if(videoLike(element)&&items[index].video_mode!=='timed')elapsed=element.currentTime;}
    const label=document.querySelector('#preview-time');if(label)label.textContent=time(Math.max(0,elapsed));
    document.querySelectorAll('.studio-playhead').forEach(line=>{const active=line.parentElement.dataset.clip===items[index]?.id;line.hidden=!active;line.style.left=Math.min(99,limit?elapsed/limit*100:0)+'%';});
-   if(playing&&ready&&elapsed>=limit&&!(element.tagName==='VIDEO'&&items[index].video_mode!=='timed'))advance();
+   if(playing&&ready&&elapsed>=limit&&!(videoLike(element)&&items[index].video_mode!=='timed'))advance();
    frame=requestAnimationFrame(progress);
  }
  function render(animate=false){
@@ -22,10 +24,10 @@ export function mountEditorPreview(host,{items,media,selectedId,onScene,onStatus
    const item=items[index],m=item&&media.find(m=>m.id===item.media_id);
    if(!m){host.innerHTML='<div class="studio-empty">Your canvas is ready.<br>Add media from the library to begin.</div>';return;}
    onScene?.(item,index);
-   const isVideo=m.type.startsWith('video/');
+   const online=isOnlineMedia(m),isVideo=m.type.startsWith('video/');
    scene=document.createElement('div');scene.className='signage-scene';scene.hidden=true;
    const activeScene=scene;
-   element=document.createElement(isVideo?'video':'img');const visual=element;
+   element=document.createElement(online?'div':isVideo?'video':'img');const visual=element;
    visual.muted=true;visual.draggable=false;visual.alt=m.name;
    activeScene.append(visual);host.append(activeScene);
    const failed=()=>{if(own!==generation||disposed)return;playing=false;status('Unable to preview this media. Check the file format.');updateButton();clearScene(previous);};
@@ -34,7 +36,7 @@ export function mountEditorPreview(host,{items,media,selectedId,onScene,onStatus
      ready=true;limit=isVideo&&item.video_mode!=='timed'&&Number.isFinite(visual.duration)?visual.duration:item.duration;
      activeScene.hidden=false;
      const overlays=textLayers(item.text_overlay).map(o=>animate?o:{...o,animation:'none'});
-     activeScene.append(createTextOverlay(overlays,limit));
+     if(m.type!=='video/youtube')activeScene.append(createTextOverlay(overlays,limit));
      const frames=slideFrames;
      if(animate&&frames[item.transition]){
        const animation=activeScene.animate(frames[item.transition],{duration:Math.min(item.transition_duration??0.6,limit)*1000,easing:'ease-in-out'});
@@ -43,6 +45,13 @@ export function mountEditorPreview(host,{items,media,selectedId,onScene,onStatus
      started=performance.now();status('Visual preview · audio is muted');
      if(isVideo&&playing)visual.play().catch(failed);
    };
+   if(online){
+     if(isVideo)visual.dataset.onlineVideo='1';
+     visual.play=()=>{activeScene.onlineController?.play();return Promise.resolve();};visual.pause=()=>activeScene.onlineController?.pause();
+     Object.defineProperty(visual,'currentTime',{get:()=>activeScene.onlineController?.currentTime||0});
+     activeScene.onlineController=mountOnlineMedia(visual,{...m,...item,source_url:m.source_url,url:m.type==='application/rss+xml'?'/api/feeds/'+m.id:m.source_url},{playing,onReady:()=>{visual.duration=activeScene.onlineController.duration||item.duration;reveal();},onEnded:()=>{if(own!==generation||disposed||!playing)return;if(item.video_mode==='timed')activeScene.onlineController.play();else advance();},onError:message=>{failed();status(message);}});
+     return;
+   }
    visual.onerror=failed;
    if(isVideo){visual.playsInline=true;visual.loop=item.video_mode==='timed';visual.onloadeddata=reveal;visual.onended=()=>{if(playing&&own===generation)advance();};}
    else visual.onload=reveal;
@@ -53,7 +62,7 @@ export function mountEditorPreview(host,{items,media,selectedId,onScene,onStatus
  render();progress();updateButton();
  return {
    pause(){if(playing){playing=false;element?.pause?.();scene?.getAnimations({subtree:true}).forEach(a=>a.pause());updateButton();}},
-   toggle(){if(!items.length)return;if(playing){playing=false;element?.pause?.();scene?.getAnimations({subtree:true}).forEach(a=>a.pause());}else{playing=true;if(elapsed>=limit||!elapsed){render(true);}else{started=performance.now()-elapsed*1000;scene?.getAnimations({subtree:true}).forEach(a=>a.play());if(element?.tagName==='VIDEO')element.play().catch(()=>{playing=false;updateButton();status('Video playback was blocked.');});}}updateButton();},
+   toggle(){if(!items.length)return;if(playing){playing=false;element?.pause?.();scene?.getAnimations({subtree:true}).forEach(a=>a.pause());}else{playing=true;if(elapsed>=limit||!elapsed){render(true);}else{started=performance.now()-elapsed*1000;scene?.getAnimations({subtree:true}).forEach(a=>a.play());if(element?.tagName==='VIDEO'||scene?.onlineController)element.play().catch(()=>{playing=false;updateButton();status('Video playback was blocked.');});}}updateButton();},
    step(delta){if(!items.length)return;playing=false;index=(index+delta+items.length)%items.length;render();updateButton();},
    replay(){if(!items.length)return;playing=true;render(true);updateButton();},
    destroy(){disposed=true;generation++;cancelAnimationFrame(frame);host.querySelectorAll('.signage-scene').forEach(clearScene);}

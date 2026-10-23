@@ -2,6 +2,10 @@
 
 ## Current server update: 2026-10-23
 
+RSS feeds and YouTube videos are now available from the Media library and Playlist Studio. Sources can be reused, edited, added to playlists, and scheduled as normal items. RSS uses a pinned XML parser dependency, public-address-only fetches, five-minute refresh, and cached fallback. YouTube uses the official embedded player with muted autoplay, pause/resume, full-video or timed playback, and error/timeout handling. The Ubuntu installer installs dependencies from the lockfile with lifecycle scripts disabled.
+
+All 16 tests passed on the Ubuntu host before installing the online-media update. RSS retrieval from a public feed succeeded there. Local browser checks covered source creation/editing, RSS preview/playback, YouTube lifecycle, scheduling, pause/resume, and mobile controls; a real YouTube API sample video also started successfully. Existing database records were compared against the backup and preserved, including 4 playlists, 14 items, 13 media files, 5 displays, 3 groups, 2 locations, 2 schedules, and 2 audio tracks. Backup: `/var/backups/usignal/online-media-20261023T172953Z` (root-only source archive and consistent SQLite copy). No demonstration sources were added to the live database.
+
 The current application server is `54.253.181.9`. Playlist availability and individual playlist-item scheduling were deployed to `/opt/usignal` on this host. Existing display/group schedule behavior is preserved. Manage availability from **Schedule playlist** in Playlist Studio and **Schedule media** in slide properties; see the local application's README for the scheduling rules.
 
 Public application: https://54.253.181.9/ · Player: https://54.253.181.9/player

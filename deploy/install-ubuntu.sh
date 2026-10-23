@@ -69,6 +69,10 @@ rsync -r --exclude=data/ --exclude=node_modules/ --exclude='*.log' \
 chown -R root:root "$release"
 chmod -R u=rwX,go=rX "$release"
 ln -s "$runtime" "$release/node"
+printf '\nInstalling locked application dependencies...\n'
+(cd "$release" && PATH="$runtime/bin:$PATH" "$runtime/bin/node" "$runtime/lib/node_modules/npm/bin/npm-cli.js" ci --omit=dev --ignore-scripts --no-audit --no-fund)
+chown -R root:root "$release/node_modules"
+chmod -R u=rwX,go=rX "$release/node_modules"
 printf '\nRunning application tests before switching releases...\n'
 (cd "$release" && runuser -u usignal -- "$runtime/bin/node" --test test/*.test.mjs)
 

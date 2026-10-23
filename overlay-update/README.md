@@ -1,6 +1,6 @@
 # U Signal signage
 
-A local digital signage server with browser players for Windows and Raspberry Pi. Requires Node.js 24 or newer; there are no npm dependencies to install.
+A local digital signage server with browser players for Windows and Raspberry Pi. Requires Node.js 24 or newer. Run `npm ci --omit=dev --ignore-scripts` once after cloning (and after dependency updates) to install the locked RSS XML parser dependency.
 
 ## Start on this Windows computer
 
@@ -38,6 +38,16 @@ Outside its windows, an item and its attached scene audio are skipped. Playlist 
 The existing **Display / Group** schedule targets continue to choose the playlist with the same precedence and priority rules. The selected playlist's availability and each item's availability then apply. Content windows do not need a display target and do not use priority. End times are exclusive, overnight windows belong to the starting day, and matching start/end times mean a 24-hour window. Schedule changes reach connected players on their next sync (about three seconds); a connection is needed for changes. A playing item may be interrupted when its window ends.
 
 Use the **Schedules** navigation entry to see all rules, or the playlist/media buttons to see just that target's rules. Moving a playlist item to a different playlist carries its windows with it; deleting the item removes its windows. Duplicating a slide creates an unrestricted new item, so configure its windows separately if needed.
+
+## RSS feeds and YouTube videos
+
+Choose **+ RSS feed** or **+ YouTube video** in the Media library or Playlist Studio. Enter a name and URL; optionally select a playlist to add a scene immediately. Sources can also be saved in the library and reused in multiple playlists. **Edit source** updates the URL or name without replacing playlist items. These sources use the same playlist/item schedules, ordering, transitions, and duration controls as uploaded media.
+
+RSS accepts public HTTP/HTTPS RSS and Atom XML feeds. The server fetches up to 20 headlines, caches them for five minutes, and renders plain-text titles and summaries. Headlines rotate every eight seconds during playback; new RSS scenes last 30 seconds by default. The feed fetcher rejects private/reserved addresses, validates every redirect, pins DNS resolution, and limits response size, decompression, and request time. If a cached feed temporarily fails, headlines may remain available for up to 24 hours; cache is in memory and resets on server restart. With no usable feed, the player reports the error and skips the scene. RSS requires outbound access from the server to the feed site.
+
+YouTube accepts individual `youtube.com/watch`, `youtu.be`, Shorts, embed, and video-specific live links; channel and playlist URLs are not supported. Videos play through the [official YouTube embedded player](https://developers.google.com/youtube/iframe_api_reference), with muted autoplay and normal YouTube controls. New YouTube scenes use a 60-second timed duration; use slide properties to choose another duration or **Play full video** for a normal video. Timed scenes restart an ended video until their duration expires. Use timed mode for live streams. Display pause/resume controls also pause/resume YouTube.
+
+The display needs Internet access to YouTube and its media domains. Embedding restrictions, sign-in/age/region restrictions, browser autoplay settings, ads, and YouTube availability can affect playback. An unavailable, blocked, or stalled video is reported and skipped rather than holding the playlist indefinitely. The app does not download or rehost YouTube content. Text overlays are not shown over YouTube videos; the overlay editor uses a source placeholder for RSS. RSS and YouTube sources are online features and are not guaranteed to work offline.
 
 ## Verify
 

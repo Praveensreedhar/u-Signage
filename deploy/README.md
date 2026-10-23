@@ -5,7 +5,7 @@
 - Ubuntu 22.04 or newer with systemd, on x86_64 or ARM64 (64-bit).
 - A user with sudo access, Internet access to Ubuntu package mirrors and nodejs.org, and GitHub access to clone this repository.
 - A current browser on each display. Allow disk space for your uploaded videos and images.
-- Node.js 24, including built-in SQLite, is downloaded and checksum-verified automatically. No npm libraries, Python requirements file, separate database server, or Docker installation is needed.
+- Node.js 24, including built-in SQLite, is downloaded and checksum-verified automatically. Locked npm dependencies for RSS parsing are installed automatically from `overlay-update/package-lock.json` with lifecycle scripts disabled. Outbound access to registry.npmjs.org is required. No Python requirements file, separate database server, or Docker installation is needed.
 - Ubuntu packages are listed in `ubuntu-packages.txt` and installed automatically. The installer uses the current Node 24 release from the [official Node.js downloads](https://nodejs.org/en/download).
 
 ## Install on a new Ubuntu machine

@@ -14,10 +14,11 @@ Install Node.js 24 or newer, then run from the repository root:
 
 ```sh
 cd overlay-update
+npm ci --omit=dev --ignore-scripts
 npm start
 ```
 
-Open http://localhost:43210/ and create the administrator account locally. The application has no npm dependencies to install.
+Open http://localhost:43210/ and create the administrator account locally. The locked dependency manifest installs the XML parser used for RSS/Atom feeds.
 
 To run the application's automated tests:
 
