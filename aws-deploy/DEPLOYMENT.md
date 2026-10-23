@@ -4,7 +4,9 @@
 
 The current application server is `54.253.181.9`. Playlist availability and individual playlist-item scheduling were deployed to `/opt/usignal` on this host. Existing display/group schedule behavior is preserved. Manage availability from **Schedule playlist** in Playlist Studio and **Schedule media** in slide properties; see the local application's README for the scheduling rules.
 
-Public HTTPS needs a separate repair: the current Nginx configuration still redirects HTTP to `3.107.225.115`, and its certificate covers that former address and expired on 2026-10-12. The app service itself is healthy on loopback port 43210. Updating the certificate and redirect to the current IP is pending authorization.
+Public application: https://54.253.181.9/ · Player: https://54.253.181.9/player
+
+HTTPS was repaired with user authorization: the expired certificate for the former address was replaced with a short-lived certificate for `54.253.181.9`, and Nginx's server names and HTTP redirect were updated to this IP. Public HTTPS returned 200 with successful certificate verification; unauthenticated `/api/state` returned 401. The existing twice-daily renewal timer remains enabled, and the renewal dry run passed. The current certificate expires on 2026-10-30; renewal must remain operational. Prior Nginx and renewal configuration copies are included in the backup directory below. If the public IP changes again, update the certificate and Nginx configuration for the new IP.
 
 All ten tests passed on Ubuntu before installation. The service and Nginx were active after deployment, the new assets were served successfully, and database foreign-key checks passed. Record counts remained unchanged: 4 playlists, 14 items, 13 media files, 5 displays, 3 groups, 2 locations, 1 schedule, and 2 audio tracks. Source and a consistent SQLite backup are stored in `/var/backups/usignal/content-scheduling-20261023T170532Z` on the server (root-only). Uploaded media remains in `/var/lib/usignal/media` and was not changed.
 
