@@ -27,6 +27,18 @@ Optional environment variables: `PORT` (default 43210), `HOST` (default 0.0.0.0)
 
 This version is intended for trusted local-network testing. For remote locations, the players need a reachable server through a private network/VPN or a properly configured HTTPS deployment. Public internet deployment, unattended OS kiosk startup, guaranteed offline media storage, schedules, audio, and multi-user roles are not configured in this version. Existing cached media may play during a brief outage, but offline playback is not guaranteed.
 
+## Playlist and individual media scheduling
+
+In **Playlist Studio**, choose **Schedule playlist** to set when that assigned playlist may play on any display. Select a slide and choose **Schedule media** in its properties to set windows for that individual item. The same uploaded file can have different schedules in different playlist items.
+
+Use **New schedule** to add multiple windows with weekdays, local start/end times, optional first/last dates, and a timezone. Both the playlist and the item must be available for the item to play. Multiple enabled windows on the same target are combined: any active window allows playback. With no enabled windows, content is unrestricted; disabling all windows removes the restriction. Delete all windows to return content to always available.
+
+Outside its windows, an item and its attached scene audio are skipped. Playlist audio stays aligned with the remaining scenes. If the playlist is outside its windows or all its items are unavailable, the player waits and resumes automatically when content becomes available. The editor preview continues to show every item so you can design the entire playlist.
+
+The existing **Display / Group** schedule targets continue to choose the playlist with the same precedence and priority rules. The selected playlist's availability and each item's availability then apply. Content windows do not need a display target and do not use priority. End times are exclusive, overnight windows belong to the starting day, and matching start/end times mean a 24-hour window. Schedule changes reach connected players on their next sync (about three seconds); a connection is needed for changes. A playing item may be interrupted when its window ends.
+
+Use the **Schedules** navigation entry to see all rules, or the playlist/media buttons to see just that target's rules. Moving a playlist item to a different playlist carries its windows with it; deleting the item removes its windows. Duplicating a slide creates an unrestricted new item, so configure its windows separately if needed.
+
 ## Verify
 
 Run `npm test` (or `node --test test/server.test.mjs`). The integration test uses a separate temporary database and checks authentication, pairing, group inheritance, display overrides, file uploads, byte-range delivery, persistence across restart, and revocation. It does not replace testing with your actual videos and Raspberry Pi/Windows hardware.

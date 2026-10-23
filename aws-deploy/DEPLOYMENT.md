@@ -1,5 +1,15 @@
 # U Signal AWS deployment
 
+## Current server update: 2026-10-23
+
+The current application server is `54.253.181.9`. Playlist availability and individual playlist-item scheduling were deployed to `/opt/usignal` on this host. Existing display/group schedule behavior is preserved. Manage availability from **Schedule playlist** in Playlist Studio and **Schedule media** in slide properties; see the local application's README for the scheduling rules.
+
+Public HTTPS needs a separate repair: the current Nginx configuration still redirects HTTP to `3.107.225.115`, and its certificate covers that former address and expired on 2026-10-12. The app service itself is healthy on loopback port 43210. Updating the certificate and redirect to the current IP is pending authorization.
+
+All ten tests passed on Ubuntu before installation. The service and Nginx were active after deployment, the new assets were served successfully, and database foreign-key checks passed. Record counts remained unchanged: 4 playlists, 14 items, 13 media files, 5 displays, 3 groups, 2 locations, 1 schedule, and 2 audio tracks. Source and a consistent SQLite backup are stored in `/var/backups/usignal/content-scheduling-20261023T170532Z` on the server (root-only). Uploaded media remains in `/var/lib/usignal/media` and was not changed.
+
+The notes below describe the earlier deployment and its former addresses.
+
 Public application: https://3.107.225.115/
 Display player: https://3.107.225.115/player
 

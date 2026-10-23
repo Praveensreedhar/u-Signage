@@ -1,5 +1,6 @@
 # Dependencies and generated build output
 node_modules/
+.deployment/
 dist/
 build/
 coverage/
